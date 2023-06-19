@@ -15,7 +15,7 @@ This application was prebuilt with the expectation to add features and gain expe
 Clone the repository to your local machine.
 
 Install the dependencies:  
-  * ```$ npm i```
+  * ```$ npm i --legacy-peer-deps```
 
 Run the app:  
   * ```$ npm run dev```
