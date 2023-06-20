@@ -42,6 +42,12 @@ export default function App() {
         })
     }
     
+    function deleteNote(event, noteId) {
+        // prevents selecting the note when clicking the trashcan
+        event.stopPropagation()
+        setNotes(oldNotes => oldNotes.filter(note => note.id != noteId));
+    }
+    
     function findCurrentNote() {
         return notes.find(note => {
             return note.id === currentNoteId
@@ -63,6 +69,7 @@ export default function App() {
                     currentNote={findCurrentNote()}
                     setCurrentNoteId={setCurrentNoteId}
                     newNote={createNewNote}
+                    deleteNote={deleteNote}
                 />
                 {
                     currentNoteId && 
