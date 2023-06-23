@@ -17,5 +17,10 @@ Clone the repository to your local machine.
 Install the dependencies:  
   * ```$ npm i --legacy-peer-deps```
 
+Set Up Firebase:  
+  * Set up your firebase account  
+  * Copy template.firebase.js to a new file named firebase.js  
+  * Fill in the details of YOUR_FIREBASE  
+
 Run the app:  
   * ```$ npm run dev```
