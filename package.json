@@ -12,10 +12,11 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-mde": "11.5.0",
-    "showdown": "1.9.1",
-    "react-split": "2.0.13",
-    "nanoid": "3.1.28"
+    "react-mde": "^11.5.0",
+    "showdown": "^1.9.1",
+    "react-split": "^2.0.13",
+    "nanoid": "^3.3.6",
+    "firebase": "^9.20.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.37",

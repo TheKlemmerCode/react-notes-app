@@ -1,58 +1,54 @@
 import { useEffect, useState } from "react"
+import {nanoid} from "nanoid"
+import { addDoc, deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore"
 import Sidebar from "./components/Sidebar"
 import Editor from "./components/Editor"
 import Split from "react-split"
-import {nanoid} from "nanoid"
+import { db, notesCollection } from "./firebase"
 
 export default function App() {
-    const [notes, setNotes] = useState(
-      () => JSON.parse(localStorage.getItem("notes")) || []
-    )
-    const [currentNoteId, setCurrentNoteId] = useState(
-        (notes[0]?.id) || ""
-    )
+    const [notes, setNotes] = useState([])
+    const [currentNoteId, setCurrentNoteId] = useState("")
 
     const currentNote = notes.find(note => note.id === currentNoteId) || notes[0]
 
     useEffect(() => {
-      localStorage.setItem("notes", JSON.stringify(notes))
-    }, [notes]) 
-    
-    function createNewNote() {
-        const newNote = {
-            id: nanoid(),
-            body: "# Type your markdown note's title here"
+        if (!currentNoteId) {
+            setCurrentNoteId(notes[0]?.id)
         }
-        setNotes(prevNotes => [newNote, ...prevNotes])
-        setCurrentNoteId(newNote.id)
+    }, [notes])
+
+    useEffect(() => {
+        // link up app with db then
+        // generate a cleanup callback function
+        const unsubscribe = onSnapshot(notesCollection, (snapshot) => {
+            const notesArr = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id
+            }))
+            setNotes(notesArr)
+      })
+      return unsubscribe
+    }, []) 
+    
+    async function createNewNote() {
+        const newNote = {
+            body: "# Type your markdown note's title here",
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+        }
+        const newNoteRef = await addDoc(notesCollection, newNote)
+        setCurrentNoteId(newNoteRef.id)
     }
     
-    function updateNote(text) {
-        // move the most recently-modified note to the top of the sidebar
-        setNotes(oldNotes => {
-            const newArray = []
-            for(let i = 0; i < oldNotes.length; i++) {
-                const oldNote = oldNotes[i]
-                if(oldNote.id === currentNoteId) {
-                    newArray.unshift({ ...oldNote, body: text })
-                } else {
-                    newArray.push(oldNote)
-                }
-            }
-            return newArray
-        })
+    async function updateNote(text) {
+        const docRef = doc(db, "notes", currentNoteId)
+        await setDoc(docRef, { body: text, updatedAt: Date.now() }, { merge: true })
     }
     
-    function deleteNote(event, noteId) {
-        // prevents selecting the note when clicking the trashcan
-        event.stopPropagation()
-        setNotes(oldNotes => oldNotes.filter(note => note.id != noteId));
-    }
-    
-    function findCurrentNote() {
-        return notes.find(note => {
-            return note.id === currentNoteId
-        }) || notes[0]
+    async function deleteNote(noteId) {
+        const docRef = doc(db, "notes", noteId)
+        await deleteDoc(docRef)
     }
     
     return (
@@ -72,14 +68,10 @@ export default function App() {
                     newNote={createNewNote}
                     deleteNote={deleteNote}
                 />
-                {
-                    currentNoteId && 
-                    notes.length > 0 &&
-                    <Editor 
-                        currentNote={currentNote} 
-                        updateNote={updateNote} 
-                    />
-                }
+                <Editor 
+                    currentNote={currentNote} 
+                    updateNote={updateNote} 
+                />
             </Split>
             :
             <div className="no-notes">
