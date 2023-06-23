@@ -9,8 +9,25 @@ import { db, notesCollection } from "./firebase"
 export default function App() {
     const [notes, setNotes] = useState([])
     const [currentNoteId, setCurrentNoteId] = useState("")
+    const [tempNoteText, setTempNoteText] = useState("")
+
+    /**
+     * Challenge:
+     * 1. Set up a new state variable called `tempNoteText`. Initialize 
+     *    it as an empty string
+     * 2. Change the Editor so that it uses `tempNoteText` and 
+     *    `setTempNoteText` for displaying and changing the text instead
+     *    of dealing directly with the `currentNote` data.
+     * 3. Create a useEffect that, if there's a `currentNote`, sets
+     *    the `tempNoteText` to `currentNote.body`. (This copies the
+     *    current note's text into the `tempNoteText` field so whenever 
+     *    the user changes the currentNote, the editor can display the 
+     *    correct text.
+     * 4. TBA
+     */
 
     const currentNote = notes.find(note => note.id === currentNoteId) || notes[0]
+    const sortedNotes = notes.sort((a, b) => b.updatedAt - a.updatedAt)
 
     useEffect(() => {
         if (!currentNoteId) {
@@ -30,6 +47,24 @@ export default function App() {
       })
       return unsubscribe
     }, []) 
+
+    useEffect(() => {
+        if (currentNote) {
+            setTempNoteText(currentNote.body)
+        }
+    }, [currentNote])
+
+    // ensures that calls to update a note on the database only
+    // happens after half a second after no changes to prevent a 
+    // call after each keystroke 
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (tempNoteText !== currentNote.body) {
+                updateNote(tempNoteText)
+            }
+        }, 500)
+        return () => clearTimeout(timeoutId)
+    }, [tempNoteText])
     
     async function createNewNote() {
         const newNote = {
@@ -62,15 +97,15 @@ export default function App() {
                 className="split"
             >
                 <Sidebar
-                    notes={notes}
+                    notes={sortedNotes}
                     currentNote={currentNote}
                     setCurrentNoteId={setCurrentNoteId}
                     newNote={createNewNote}
                     deleteNote={deleteNote}
                 />
                 <Editor 
-                    currentNote={currentNote} 
-                    updateNote={updateNote} 
+                    tempNoteText={tempNoteText} 
+                    setTempNoteText={setTempNoteText}
                 />
             </Split>
             :
